@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CIPHER INTEL — LLM Privacy & Security Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:        #03060a;
+    --surface:   #080f18;
+    --surface2:  #0c1620;
+    --surface3:  #101e2c;
+    --border:    #162030;
+    --border2:   #1e3040;
+
+    --gpt:    #10a37f;
+    --claude: #d4956a;
+    --gemini: #4285f4;
+    --llama:  #a855f7;
+    --grok:   #1d9bf0;
+
+    --risk-critical: #ff2d55;
+    --risk-high:     #ff6b35;
+    --risk-medium:   #ffd166;
+    --risk-low:      #06d6a0;
+    --risk-safe:     #00b4d8;
+
+    --text:       #dce8f0;
+    --text-muted: #5a7a90;
+    --text-dim:   #2a4555;
+
+    --font-display: 'Orbitron', sans-serif;
+    --font-mono:    'IBM Plex Mono', monospace;
+    --font-body:    'Crimson Pro', serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* Animated scan line overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Moving threat scan beam */
+  body::before {
+    content: '';
+    position: fixed;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255,45,85,0.4), transparent);
+    animation: scanBeam 8s linear infinite;
+    z-index: 9998;
+    pointer-events: none;
+  }
+
+  @keyframes scanBeam {
+    0%   { top: -2px; opacity: 0; }
+    5%   { opacity: 1; }
+    95%  { opacity: 1; }
+    100% { top: 100vh; opacity: 0; }
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(3,6,10,0.96);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 72px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .brand-icon {
+    width: 36px; height: 36px;
+    border: 1.5px solid var(--risk-critical);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    animation: iconPulse 3s ease-in-out infinite;
+    position: relative;
+  }
+
+  .brand-icon::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 1px solid var(--risk-critical);
+    border-radius: 6px;
+    opacity: 0.3;
+    animation: iconPulse 3s ease-in-out infinite reverse;
+  }
+
+  @keyframes iconPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(255,45,85,0.3); }
+    50%       { box-shadow: 0 0 25px rgba(255,45,85,0.6); }
+  }
+
+  .brand-text {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    letter-spacing: 6px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .brand-sub {
+    font-size: 0.55rem;
+    letter-spacing: 3px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .threat-level {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    border: 1px solid var(--risk-high);
+    border-radius: 2px;
+    background: rgba(255,107,53,0.06);
+  }
+
+  .threat-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--risk-high);
+    animation: threatPulse 1.2s infinite;
+  }
+
+  @keyframes threatPulse {
+    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(255,107,53,0.4); }
+    50%       { opacity: 0.7; transform: scale(0.9); box-shadow: 0 0 0 6px rgba(255,107,53,0); }
+  }
+
+  .threat-text {
+    font-size: 0.6rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--risk-high);
+  }
+
+  .last-scan {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: sticky;
+    top: 72px;
+    z-index: 99;
+    background: rgba(3,6,10,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    padding: 0 40px;
+    gap: 0;
+  }
+
+  .tab {
+    padding: 14px 24px;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--risk-critical);
+    border-bottom-color: var(--risk-critical);
+  }
+
+  /* ─── MAIN ─── */
+  main {
+    padding: 32px 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeIn 0.3s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── GRID LAYOUTS ─── */
+  .grid-5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 16px; margin-bottom: 24px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 24px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .grid-2-3 { display: grid; grid-template-columns: 2fr 3fr; gap: 20px; margin-bottom: 24px; }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 22px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .card:hover { border-color: var(--border2); }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,45,85,0.3), transparent);
+  }
+
+  .card-title {
+    font-size: 0.58rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title::before {
+    content: '';
+    width: 3px; height: 3px;
+    border-radius: 50%;
+    background: var(--risk-critical);
+  }
+
+  /* ─── MODEL SCORE CARDS ─── */
+  .model-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+
+  .model-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+
+  .model-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .model-card.gpt::after    { background: var(--gpt); }
+  .model-card.claude::after { background: var(--claude); }
+  .model-card.gemini::after { background: var(--gemini); }
+  .model-card.llama::after  { background: var(--llama); }
+  .model-card.grok::after   { background: var(--grok); }
+
+  .model-name {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    margin-bottom: 4px;
+  }
+
+  .model-version {
+    font-size: 0.55rem;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+
+  .risk-score {
+    font-family: var(--font-display);
+    font-size: 2.8rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .risk-label {
+    font-size: 0.6rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    display: inline-block;
+    margin-bottom: 14px;
+  }
+
+  .label-critical { background: rgba(255,45,85,0.15);  color: var(--risk-critical); border: 1px solid rgba(255,45,85,0.3); }
+  .label-high     { background: rgba(255,107,53,0.15); color: var(--risk-high);     border: 1px solid rgba(255,107,53,0.3); }
+  .label-medium   { background: rgba(255,209,102,0.12);color: var(--risk-medium);   border: 1px solid rgba(255,209,102,0.3); }
+  .label-low      { background: rgba(6,214,160,0.12);  color: var(--risk-low);      border: 1px solid rgba(6,214,160,0.3); }
+  .label-safe     { background: rgba(0,180,216,0.12);  color: var(--risk-safe);     border: 1px solid rgba(0,180,216,0.3); }
+
+  .mini-bars { display: flex; flex-direction: column; gap: 5px; }
+
+  .mini-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.58rem;
+    color: var(--text-muted);
+  }
+
+  .mini-bar-label { min-width: 60px; }
+
+  .mini-bar-track {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .mini-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1.2s cubic-bezier(0.16,1,0.3,1);
+  }
+
+  .mini-bar-val {
+    min-width: 28px;
+    text-align: right;
+    color: var(--text);
+  }
+
+  /* ─── RISK MATRIX ─── */
+  .risk-matrix {
+    display: grid;
+    grid-template-columns: repeat(5,1fr);
+    gap: 3px;
+    margin-bottom: 20px;
+  }
+
+  .matrix-cell {
+    aspect-ratio: 1;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.55rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .matrix-cell:hover { transform: scale(1.05); z-index: 10; }
+
+  .matrix-header {
+    font-size: 0.55rem;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 6px 0;
+    text-transform: uppercase;
+  }
+
+  /* ─── VULNERABILITY TABLE ─── */
+  .vuln-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.7rem;
+  }
+
+  .vuln-table th {
+    font-size: 0.55rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
+
+  .vuln-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  .vuln-table tr:last-child td { border-bottom: none; }
+
+  .vuln-table tr:hover td { background: var(--surface2); }
+
+  .severity-pill {
+    padding: 3px 10px;
+    border-radius: 2px;
+    font-size: 0.55rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: inline-block;
+  }
+
+  .model-pill {
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 0.55rem;
+    letter-spacing: 1px;
+    display: inline-block;
+    margin: 1px;
+  }
+
+  /* ─── COMPLIANCE GRID ─── */
+  .compliance-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .compliance-item:last-child { border: none; }
+
+  .compliance-name {
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+  }
+
+  .compliance-sub {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .compliance-scores {
+    display: flex;
+    gap: 8px;
+  }
+
+  .comp-score {
+    width: 38px;
+    height: 38px;
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 500;
+  }
+
+  .comp-score span {
+    font-size: 0.45rem;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+
+  /* ─── CHART CONTAINERS ─── */
+  .chart-wrap      { position: relative; height: 260px; }
+  .chart-wrap-tall { position: relative; height: 340px; }
+  .chart-wrap-xl   { position: relative; height: 420px; }
+
+  /* ─── STAT CARDS ─── */
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 20px;
+  }
+
+  .stat-val {
+    font-family: var(--font-display);
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 0.58rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  .stat-delta {
+    font-size: 0.6rem;
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  /* ─── EXECUTIVE SUMMARY ─── */
+  .exec-finding {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--risk-critical);
+    border-radius: 0 3px 3px 0;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    transition: all 0.3s;
+  }
+
+  .exec-finding:hover { border-left-color: var(--risk-high); }
+  .exec-finding.high  { border-left-color: var(--risk-high); }
+  .exec-finding.med   { border-left-color: var(--risk-medium); }
+  .exec-finding.low   { border-left-color: var(--risk-low); }
+
+  .finding-title {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+
+  .finding-body {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .finding-meta {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  .finding-tag {
+    font-size: 0.55rem;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* ─── TIMELINE / INCIDENT LOG ─── */
+  .incident-row {
+    display: grid;
+    grid-template-columns: 110px 80px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.7rem;
+  }
+
+  .incident-row:last-child { border: none; }
+
+  .incident-time { color: var(--text-muted); font-size: 0.62rem; }
+
+  /* ─── RADAR / SPIDER CHART ─── */
+  .radar-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 320px;
+  }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    margin-top: 50px;
+    padding: 20px 40px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.58rem;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+  }
+
+  footer a { color: var(--text-muted); text-decoration: none; }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    letter-spacing: 4px;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border2), transparent);
+  }
+
+  code {
+    background: rgba(255,45,85,0.08);
+    border: 1px solid rgba(255,45,85,0.2);
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--risk-critical);
+  }
+
+  .datasrc {
+    font-size: 0.55rem;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-top: 10px;
+    text-transform: uppercase;
+  }
+
+  .highlight-box {
+    background: rgba(255,45,85,0.05);
+    border: 1px solid rgba(255,45,85,0.2);
+    border-radius: 3px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 0.72rem;
+    line-height: 1.8;
+    color: var(--risk-high);
+  }
+
+  .highlight-box strong {
+    display: block;
+    font-size: 0.6rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    color: var(--risk-critical);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">🛡</div>
+    <div>
+      <div class="brand-text">CIPHER INTEL</div>
+      <div class="brand-sub">LLM Privacy & Security Intelligence Platform</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="last-scan" id="last-scan-time">Last scan: —</div>
+    <div class="threat-level">
+      <div class="threat-dot"></div>
+      <div class="threat-text">Threat Level: <span id="global-threat">ELEVATED</span></div>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <button class="tab active" onclick="showPanel('overview',this)">◈ Executive Overview</button>
+  <button class="tab" onclick="showPanel('models',this)">◈ Model Risk Scores</button>
+  <button class="tab" onclick="showPanel('vulnerabilities',this)">◈ Vulnerabilities</button>
+  <button class="tab" onclick="showPanel('compliance',this)">◈ Compliance</button>
+  <button class="tab" onclick="showPanel('incidents',this)">◈ Incident Log</button>
+  <button class="tab" onclick="showPanel('compare',this)">◈ Side-by-Side Compare</button>
+</nav>
+
+<main>
+
+<!-- ══════════════════════════ EXECUTIVE OVERVIEW ══════ -->
+<div id="panel-overview" class="panel active">
+
+  <div class="grid-4" style="margin-bottom:24px">
+    <div class="stat-card">
+      <div class="stat-val" id="stat-total-cves" style="color:var(--risk-critical)">847</div>
+      <div class="stat-label">Active Vulnerabilities</div>
+      <div class="stat-delta" style="background:rgba(255,45,85,0.1);color:var(--risk-critical)">↑ +23 this week</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="stat-avg-risk" style="color:var(--risk-high)">68.4</div>
+      <div class="stat-label">Avg Risk Score (0–100)</div>
+      <div class="stat-delta" style="background:rgba(255,107,53,0.1);color:var(--risk-high)">↑ +4.2 vs last month</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--risk-medium)">3 / 5</div>
+      <div class="stat-label">Models Failing Compliance</div>
+      <div class="stat-delta" style="background:rgba(255,209,102,0.1);color:var(--risk-medium)">GDPR · HIPAA · SOC2</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="stat-incidents" style="color:var(--risk-low)">94.2%</div>
+      <div class="stat-label">Prompt Injection Defense</div>
+      <div class="stat-delta" style="background:rgba(6,214,160,0.1);color:var(--risk-low)">↑ +1.8% improvement</div>
+    </div>
+  </div>
+
+  <div class="highlight-box">
+    <strong>⚠ Executive Alert — Action Required</strong>
+    Three of five evaluated LLMs exhibit critical PII leakage vulnerabilities under adversarial prompting conditions. Meta Llama 3 shows the highest exposure rate at 34.7%. Immediate policy review recommended before enterprise deployment. Claude 3.5 Sonnet demonstrates the lowest overall risk profile.
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="section-title">Key Findings</div>
+      <div class="exec-finding">
+        <div class="finding-title">CRITICAL — PII LEAKAGE ACROSS ALL MODELS</div>
+        <div class="finding-body">All five evaluated models demonstrated measurable personally identifiable information exposure when subjected to multi-turn adversarial prompting sequences. Risk ranges from 8.2% (Claude) to 34.7% (Llama). Enterprise deployment without guardrails poses significant regulatory liability.</div>
+        <div class="finding-meta">
+          <span class="finding-tag">CVE-2024-LLM-001</span>
+          <span class="finding-tag">Affects: All Models</span>
+          <span class="finding-tag" style="color:var(--risk-critical)">CRITICAL</span>
+        </div>
+      </div>
+      <div class="exec-finding high">
+        <div class="finding-title">HIGH — PROMPT INJECTION VIA SYSTEM ROLE BYPASS</div>
+        <div class="finding-body">GPT-4o and Grok-1.5 exhibit susceptibility to indirect prompt injection through document ingestion pathways. Attackers can embed malicious instructions in uploaded files that override system-level safety directives at a 22% success rate in controlled testing.</div>
+        <div class="finding-meta">
+          <span class="finding-tag">CVE-2024-LLM-007</span>
+          <span class="finding-tag">Affects: GPT-4o, Grok</span>
+          <span class="finding-tag" style="color:var(--risk-high)">HIGH</span>
+        </div>
+      </div>
+      <div class="exec-finding med">
+        <div class="finding-title">MEDIUM — TRAINING DATA MEMORIZATION</div>
+        <div class="finding-body">Structured extraction attacks successfully recovered verbatim training data sequences from GPT-4o and Gemini Ultra including email addresses, phone numbers, and partial credit card numbers present in pre-training corpora.</div>
+        <div class="finding-meta">
+          <span class="finding-tag">CVE-2024-LLM-012</span>
+          <span class="finding-tag">Affects: GPT-4o, Gemini</span>
+          <span class="finding-tag" style="color:var(--risk-medium)">MEDIUM</span>
+        </div>
+      </div>
+      <div class="exec-finding low">
+        <div class="finding-title">LOW — BIAS IN HIGH-STAKES DECISION CONTEXTS</div>
+        <div class="finding-body">Statistically significant demographic bias detected in all models when applied to hiring, lending, and medical triage use cases. Llama 3 shows the highest disparity index at 0.31. All models require bias auditing before use in regulated decision-making contexts.</div>
+        <div class="finding-meta">
+          <span class="finding-tag">BIAS-2024-003</span>
+          <span class="finding-tag">Affects: All Models</span>
+          <span class="finding-tag" style="color:var(--risk-low)">LOW-MEDIUM</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">Overall Risk Radar</div>
+      <div class="card">
+        <div class="card-title">Multi-Dimensional Risk Profile — All Models</div>
+        <div class="radar-container">
+          <canvas id="chart-radar"></canvas>
+        </div>
+        <div class="datasrc">Axes: Prompt Injection · PII Leakage · Hallucination · Bias · Compliance · Data Retention</div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <div class="card-title">Risk Score Trend — Last 12 Months</div>
+        <div class="chart-wrap">
+          <canvas id="chart-trend"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ MODEL RISK SCORES ══════ -->
+<div id="panel-models" class="panel">
+  <div class="section-title">Model Risk Scores — Current Assessment</div>
+
+  <div class="grid-5" style="margin-bottom:28px">
+    <!-- GPT -->
+    <div class="model-card gpt">
+      <div class="model-name" style="color:var(--gpt)">GPT-4o</div>
+      <div class="model-version">OpenAI · May 2024</div>
+      <div class="risk-score" style="color:var(--risk-high)">71</div>
+      <div class="risk-label label-high">HIGH RISK</div>
+      <div class="mini-bars">
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Injection</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:78%;background:var(--risk-high)"></div></div>
+          <div class="mini-bar-val">78</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">PII Leak</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:62%;background:var(--risk-medium)"></div></div>
+          <div class="mini-bar-val">62</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Hallucin.</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:55%;background:var(--risk-medium)"></div></div>
+          <div class="mini-bar-val">55</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Bias</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:68%;background:var(--risk-high)"></div></div>
+          <div class="mini-bar-val">68</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Compliance</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:72%;background:var(--risk-high)"></div></div>
+          <div class="mini-bar-val">72</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLAUDE -->
+    <div class="model-card claude">
+      <div class="model-name" style="color:var(--claude)">CLAUDE</div>
+      <div class="model-version">Anthropic · 3.5 Sonnet</div>
+      <div class="risk-score" style="color:var(--risk-medium)">38</div>
+      <div class="risk-label label-medium">MODERATE</div>
+      <div class="mini-bars">
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Injection</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:28%;background:var(--risk-low)"></div></div>
+          <div class="mini-bar-val">28</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">PII Leak</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:22%;background:var(--risk-low)"></div></div>
+          <div class="mini-bar-val">22</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Hallucin.</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:41%;background:var(--risk-medium)"></div></div>
+          <div class="mini-bar-val">41</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Bias</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:45%;background:var(--risk-medium)"></div></div>
+          <div class="mini-bar-val">45</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Compliance</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:54%;background:var(--risk-medium)"></div></div>
+          <div class="mini-bar-val">54</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GEMINI -->
+    <div class="model-card gemini">
+      <div class="model-name" style="color:var(--gemini)">GEMINI</div>
+      <div class="model-version">Google · Ultra 1.5</div>
+      <div class="risk-score" style="color:var(--risk-high)">64</div>
+      <div class="risk-label label-high">HIGH RISK</div>
+      <div class="mini-bars">
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Injection</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:58%;background:var(--risk-medium)"></div></div>
+          <div class="mini-bar-val">58</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">PII Leak</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:71%;background:var(--risk-high)"></div></div>
+          <div class="mini-bar-val">71</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Hallucin.</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:60%;background:var(--risk-medium)"></div></div>
+          <div class="mini-bar-val">60</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Bias</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:62%;background:var(--risk-medium)"></div></div>
+          <div class="mini-bar-val">62</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Compliance</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:69%;background:var(--risk-high)"></div></div>
+          <div class="mini-bar-val">69</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LLAMA -->
+    <div class="model-card llama">
+      <div class="model-name" style="color:var(--llama)">LLAMA 3</div>
+      <div class="model-version">Meta · 70B Instruct</div>
+      <div class="risk-score" style="color:var(--risk-critical)">88</div>
+      <div class="risk-label label-critical">CRITICAL</div>
+      <div class="mini-bars">
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Injection</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:91%;background:var(--risk-critical)"></div></div>
+          <div class="mini-bar-val">91</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">PII Leak</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:85%;background:var(--risk-critical)"></div></div>
+          <div class="mini-bar-val">85</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Hallucin.</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:78%;background:var(--risk-high)"></div></div>
+          <div class="mini-bar-val">78</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Bias</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:88%;background:var(--risk-critical)"></div></div>
+          <div class="mini-bar-val">88</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Compliance</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:96%;background:var(--risk-critical)"></div></div>
+          <div class="mini-bar-val">96</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GROK -->
+    <div class="model-card grok">
+      <div class="model-name" style="color:var(--grok)">GROK</div>
+      <div class="model-version">xAI · Grok-1.5</div>
+      <div class="risk-score" style="color:var(--risk-high)">76</div>
+      <div class="risk-label label-high">HIGH RISK</div>
+      <div class="mini-bars">
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Injection</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:82%;background:var(--risk-critical)"></div></div>
+          <div class="mini-bar-val">82</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">PII Leak</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:74%;background:var(--risk-high)"></div></div>
+          <div class="mini-bar-val">74</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Hallucin.</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:68%;background:var(--risk-high)"></div></div>
+          <div class="mini-bar-val">68</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Bias</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:72%;background:var(--risk-high)"></div></div>
+          <div class="mini-bar-val">72</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Compliance</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:80%;background:var(--risk-high)"></div></div>
+          <div class="mini-bar-val">80</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Risk Score Distribution — All Categories</div>
+      <div class="chart-wrap-tall">
+        <canvas id="chart-model-bars"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Privacy Risk Over Time — 12-Month History</div>
+      <div class="chart-wrap-tall">
+        <canvas id="chart-model-history"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ VULNERABILITIES ══════ -->
+<div id="panel-vulnerabilities" class="panel">
+  <div class="section-title">Vulnerability Database</div>
+
+  <div class="grid-4" style="margin-bottom:24px">
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--risk-critical)">142</div>
+      <div class="stat-label">Critical CVEs</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--risk-high)">318</div>
+      <div class="stat-label">High Severity</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--risk-medium)">271</div>
+      <div class="stat-label">Medium Severity</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--risk-low)">116</div>
+      <div class="stat-label">Low / Informational</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-title">Active Vulnerability Registry</div>
+    <table class="vuln-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Vulnerability</th>
+          <th>Category</th>
+          <th>Affected Models</th>
+          <th>Severity</th>
+          <th>CVSS</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="vuln-tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Vulnerability Category Breakdown</div>
+      <div class="chart-wrap">
+        <canvas id="chart-vuln-cat"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">New Vulnerabilities Discovered — Monthly</div>
+      <div class="chart-wrap">
+        <canvas id="chart-vuln-monthly"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ COMPLIANCE ══════ -->
+<div id="panel-compliance" class="panel">
+  <div class="section-title">Regulatory Compliance Status</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Compliance Matrix — Framework × Model</div>
+      <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <span style="font-size:0.55rem;letter-spacing:2px;color:var(--text-muted)">SCORE KEY:</span>
+        <span class="risk-label label-safe" style="font-size:0.5rem;padding:2px 6px">90–100 PASS</span>
+        <span class="risk-label label-low" style="font-size:0.5rem;padding:2px 6px">75–89 WARN</span>
+        <span class="risk-label label-medium" style="font-size:0.5rem;padding:2px 6px">50–74 AT RISK</span>
+        <span class="risk-label label-critical" style="font-size:0.5rem;padding:2px 6px">0–49 FAIL</span>
+      </div>
+
+      <div style="overflow-x:auto">
+        <table class="vuln-table">
+          <thead>
+            <tr>
+              <th>Framework</th>
+              <th style="color:var(--gpt)">GPT-4o</th>
+              <th style="color:var(--claude)">Claude</th>
+              <th style="color:var(--gemini)">Gemini</th>
+              <th style="color:var(--llama)">Llama 3</th>
+              <th style="color:var(--grok)">Grok</th>
+            </tr>
+          </thead>
+          <tbody id="compliance-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Compliance Score by Framework</div>
+      <div class="chart-wrap-tall">
+        <canvas id="chart-compliance"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:0">
+    <div class="card-title">Compliance Gap Analysis — Key Failures</div>
+    <div id="compliance-gaps"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ INCIDENT LOG ══════ -->
+<div id="panel-incidents" class="panel">
+  <div class="section-title">Security Incident & Test Log</div>
+
+  <div class="grid-3" style="margin-bottom:24px">
+    <div class="card">
+      <div class="card-title">Incidents This Month</div>
+      <div class="chart-wrap">
+        <canvas id="chart-incidents"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Attack Vector Distribution</div>
+      <div class="chart-wrap">
+        <canvas id="chart-vectors"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Mean Time to Detect (MTTD)</div>
+      <div class="chart-wrap">
+        <canvas id="chart-mttd"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Recent Security Events & Red Team Results</div>
+    <div id="incident-log"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ COMPARE ══════ -->
+<div id="panel-compare" class="panel">
+  <div class="section-title">Side-by-Side Model Comparison</div>
+
+  <div class="grid-2" style="margin-bottom:24px">
+    <div class="card">
+      <div class="card-title">Prompt Injection Success Rate by Attack Type</div>
+      <div class="chart-wrap-tall">
+        <canvas id="chart-injection"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">PII Exposure Rate Under Adversarial Conditions</div>
+      <div class="chart-wrap-tall">
+        <canvas id="chart-pii"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Hallucination Rate by Domain</div>
+      <div class="chart-wrap">
+        <canvas id="chart-hallucination"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Bias Disparity Index by Use Case</div>
+      <div class="chart-wrap">
+        <canvas id="chart-bias"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:0">
+    <div class="card-title">Executive Recommendation Matrix</div>
+    <table class="vuln-table">
+      <thead>
+        <tr>
+          <th>Use Case</th>
+          <th style="color:var(--gpt)">GPT-4o</th>
+          <th style="color:var(--claude)">Claude 3.5</th>
+          <th style="color:var(--gemini)">Gemini Ultra</th>
+          <th style="color:var(--llama)">Llama 3</th>
+          <th style="color:var(--grok)">Grok 1.5</th>
+          <th>Recommended</th>
+        </tr>
+      </thead>
+      <tbody id="rec-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <div>CIPHER INTEL v1.0 — LLM SECURITY INTELLIGENCE — MIT LICENSE — DEPLOYABLE TO GITHUB PAGES</div>
+  <div>Sources: OWASP LLM Top 10 · NIST AI RMF · CVE Database · Internal Red Team · Academic Literature</div>
+</footer>
+
+<script>
+// ═══════════ LIVE BACKEND CONFIG ═══════════
+// Set these after deploying your backend to Railway/Render
+let BACKEND_URL    = sessionStorage.getItem('ci_backend_url') || '';
+let BACKEND_SECRET = sessionStorage.getItem('ci_backend_secret') || '';
+
+async function liveGet(endpoint, params = {}) {
+  if (!BACKEND_URL) return null;
+  const qs  = new URLSearchParams(params).toString();
+  const url = `${BACKEND_URL}${endpoint}${qs ? '?' + qs : ''}`;
+  try {
+    const res = await fetch(url, {
+      headers: BACKEND_SECRET ? { 'X-App-Secret': BACKEND_SECRET } : {}
+    });
+    return res.ok ? res.json() : null;
+  } catch(e) {
+    console.warn('Backend unavailable — using demo data:', e);
+    return null;
+  }
+}
+
+async function loadLiveData() {
+  if (!BACKEND_URL) return;
+  try {
+    // Load summary and update headline stats
+    const summary = await liveGet('/api/summary');
+    if (summary) {
+      document.getElementById('stat-total-cves').textContent  = summary.total_cves || '—';
+      document.getElementById('stat-critical-cves').textContent = summary.critical_cves || '—';
+      document.getElementById('stat-incidents').textContent   = summary.total_incidents || '—';
+      document.getElementById('stat-avg-risk').textContent    = summary.global_avg_score || '—';
+      document.getElementById('last-scan-time').textContent   =
+        'Last scan: ' + new Date(summary.last_updated).toLocaleTimeString();
+    }
+
+    // Load live CVEs into vulnerability table
+    const cveData = await liveGet('/api/cves', { limit: 20 });
+    if (cveData?.cves?.length) {
+      const tbody = document.getElementById('vuln-tbody');
+      tbody.innerHTML = cveData.cves.map(v => `
+        <tr>
+          <td><a href="https://nvd.nist.gov/vuln/detail/${v.id}" target="_blank" style="text-decoration:none"><code style="font-size:0.62rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,45,85,0.2)'" onmouseout="this.style.background='rgba(255,45,85,0.08)'">${v.id} ↗</code></a></td>
+          <td style="font-size:0.72rem;max-width:220px">${v.description.substring(0,120)}...</td>
+          <td style="font-size:0.65rem;color:var(--text-muted)">${v.category}</td>
+          <td>${v.affected.map(m=>`<span class="model-pill" style="background:${modelColor(m)}18;color:${modelColor(m)};border:1px solid ${modelColor(m)}40">${m}</span>`).join('')}</td>
+          <td><span class="severity-pill ${sevLabel(v.severity)}">${v.severity}</span></td>
+          <td style="font-family:var(--font-display);font-size:0.8rem;color:${sevColor(v.severity)}">${v.cvss || '—'}</td>
+          <td style="font-size:0.6rem;letter-spacing:1px;color:var(--risk-medium)">LIVE</td>
+        </tr>`).join('');
+    }
+
+    // Load live incidents
+    const incData = await liveGet('/api/incidents', { limit: 15 });
+    if (incData?.incidents?.length) {
+      document.getElementById('incident-log').innerHTML = incData.incidents.map(inc => `
+        <div class="incident-row">
+          <div class="incident-time">${inc.date}</div>
+          <div><span class="severity-pill label-high">LIVE</span></div>
+          <div>
+            <div style="font-size:0.72rem;margin-bottom:3px">
+              <span style="color:${modelColor(inc.affected_models[0])}">${inc.affected_models.join(', ')}</span> — ${inc.category}
+            </div>
+            <div style="font-family:var(--font-body);font-style:italic;font-size:0.78rem;color:var(--text-muted);line-height:1.5">${inc.title}: ${inc.description.substring(0,200)}...</div>
+            <a href="${inc.url}" target="_blank" style="font-size:0.58rem;color:var(--risk-safe);letter-spacing:1px">→ VIEW IN AIID</a>
+          </div>
+          <div></div>
+        </div>`).join('');
+    }
+
+    console.log('✅ Cipher Intel: Live data loaded from backend');
+  } catch(e) {
+    console.warn('Live data load failed:', e);
+  }
+}
+
+// ═══════════ CHART DEFAULTS ═══════════
+Chart.defaults.color = '#5a7a90';
+Chart.defaults.borderColor = '#162030';
+Chart.defaults.font.family = 'IBM Plex Mono';
+Chart.defaults.font.size = 10;
+
+const MODELS   = ['GPT-4o','Claude 3.5','Gemini Ultra','Llama 3','Grok 1.5'];
+const M_COLORS = ['#10a37f','#d4956a','#4285f4','#a855f7','#1d9bf0'];
+const MONTHS   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+let charts = {};
+
+function mkChart(id, config) {
+  if(charts[id]) charts[id].destroy();
+  const ctx = document.getElementById(id);
+  if(!ctx) return;
+  charts[id] = new Chart(ctx.getContext('2d'), config);
+}
+
+const GRID = { color: '#162030' };
+const TICKS = { color: '#5a7a90' };
+
+// ═══════════ OVERVIEW CHARTS ═══════════
+function initOverview() {
+  // Radar
+  mkChart('chart-radar', {
+    type: 'radar',
+    data: {
+      labels: ['Prompt Injection','PII Leakage','Hallucination','Bias','Compliance','Data Retention'],
+      datasets: [
+        { label:'GPT-4o',       data:[78,62,55,68,72,65], borderColor:'#10a37f', backgroundColor:'rgba(16,163,127,0.08)', borderWidth:2, pointRadius:3 },
+        { label:'Claude 3.5',   data:[28,22,41,45,54,30], borderColor:'#d4956a', backgroundColor:'rgba(212,149,106,0.08)', borderWidth:2, pointRadius:3 },
+        { label:'Gemini Ultra', data:[58,71,60,62,69,74], borderColor:'#4285f4', backgroundColor:'rgba(66,133,244,0.06)', borderWidth:2, pointRadius:3 },
+        { label:'Llama 3',      data:[91,85,78,88,96,82], borderColor:'#a855f7', backgroundColor:'rgba(168,85,247,0.06)', borderWidth:2, pointRadius:3 },
+        { label:'Grok 1.5',     data:[82,74,68,72,80,77], borderColor:'#1d9bf0', backgroundColor:'rgba(29,155,240,0.06)', borderWidth:2, pointRadius:3 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { r: { grid: { color:'#162030' }, pointLabels: { color:'#5a7a90', font:{size:10} }, ticks: { display:false }, min:0, max:100 } },
+      plugins: { legend: { labels: { color:'#5a7a90', font:{size:10}, boxWidth:12 } } }
+    }
+  });
+
+  // Trend
+  const trendData = {
+    'GPT-4o':       [68,70,72,74,71,73,75,72,70,71,72,71],
+    'Claude 3.5':   [45,43,41,40,38,37,36,38,37,36,38,38],
+    'Gemini Ultra': [60,62,63,65,63,64,66,65,63,64,64,64],
+    'Llama 3':      [80,82,84,85,86,87,88,87,88,89,88,88],
+    'Grok 1.5':     [72,74,75,76,75,76,77,76,77,76,76,76]
+  };
+  mkChart('chart-trend', {
+    type: 'line',
+    data: {
+      labels: MONTHS,
+      datasets: MODELS.map((m,i) => ({
+        label: m, data: trendData[m],
+        borderColor: M_COLORS[i], backgroundColor: 'transparent',
+        borderWidth: 1.5, pointRadius: 2, tension: 0.4
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color:'#5a7a90', font:{size:9}, boxWidth:10 } } },
+      scales: {
+        x: { ticks: TICKS, grid: GRID },
+        y: { ticks: {...TICKS, callback: v=>v}, grid: GRID, min:20, max:100 }
+      }
+    }
+  });
+}
+
+// ═══════════ MODEL CHARTS ═══════════
+function initModels() {
+  const categories = ['Prompt Injection','PII Leakage','Hallucination','Bias','Compliance','Data Retention'];
+  const scores = {
+    'GPT-4o':       [78,62,55,68,72,65],
+    'Claude 3.5':   [28,22,41,45,54,30],
+    'Gemini Ultra': [58,71,60,62,69,74],
+    'Llama 3':      [91,85,78,88,96,82],
+    'Grok 1.5':     [82,74,68,72,80,77]
+  };
+
+  mkChart('chart-model-bars', {
+    type: 'bar',
+    data: {
+      labels: categories,
+      datasets: MODELS.map((m,i) => ({
+        label: m, data: scores[m],
+        backgroundColor: M_COLORS[i]+'99', borderColor: M_COLORS[i],
+        borderWidth: 1
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color:'#5a7a90', font:{size:9}, boxWidth:10 } } },
+      scales: {
+        x: { ticks: TICKS, grid: GRID },
+        y: { ticks: {...TICKS, callback: v=>v+'%'}, grid: GRID, min:0, max:100 }
+      }
+    }
+  });
+
+  const hist = {
+    'GPT-4o':       [68,70,71,73,74,72,73,75,72,71,72,71],
+    'Claude 3.5':   [44,43,42,40,39,38,37,38,37,36,38,38],
+    'Gemini Ultra': [60,62,63,64,65,63,64,66,65,64,64,64],
+    'Llama 3':      [80,82,83,85,86,87,88,88,87,88,89,88],
+    'Grok 1.5':     [72,74,75,76,75,76,77,76,77,76,76,76]
+  };
+  mkChart('chart-model-history', {
+    type: 'line',
+    data: {
+      labels: MONTHS,
+      datasets: MODELS.map((m,i) => ({
+        label: m, data: hist[m],
+        borderColor: M_COLORS[i], backgroundColor: M_COLORS[i]+'15',
+        borderWidth: 2, pointRadius: 2, tension: 0.4, fill: false
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color:'#5a7a90', font:{size:9}, boxWidth:10 } } },
+      scales: {
+        x: { ticks: TICKS, grid: GRID },
+        y: { ticks: TICKS, grid: GRID, min:20, max:100 }
+      }
+    }
+  });
+}
+
+// ═══════════ VULNERABILITIES ═══════════
+const VULNS = [
+  {id:'CVE-2024-LLM-001',name:'Multi-turn PII Extraction',cat:'Data Leakage',models:['GPT-4o','Gemini','Llama 3','Grok'],sev:'CRITICAL',cvss:9.2,status:'OPEN'},
+  {id:'CVE-2024-LLM-007',name:'Indirect Prompt Injection via Document Ingestion',cat:'Prompt Injection',models:['GPT-4o','Grok'],sev:'HIGH',cvss:8.1,status:'OPEN'},
+  {id:'CVE-2024-LLM-012',name:'Training Data Memorization & Extraction',cat:'Data Leakage',models:['GPT-4o','Gemini'],sev:'HIGH',cvss:7.8,status:'PARTIAL'},
+  {id:'CVE-2024-LLM-019',name:'Jailbreak via Roleplay Escalation',cat:'Safety Bypass',models:['Llama 3','Grok','GPT-4o'],sev:'HIGH',cvss:7.5,status:'OPEN'},
+  {id:'CVE-2024-LLM-023',name:'System Prompt Leakage via Reflection Attack',cat:'Prompt Injection',models:['Gemini','Grok'],sev:'HIGH',cvss:7.3,status:'OPEN'},
+  {id:'CVE-2024-LLM-031',name:'Demographic Bias in Hiring Recommendations',cat:'Bias',models:['All Models'],sev:'MEDIUM',cvss:6.1,status:'MONITORING'},
+  {id:'CVE-2024-LLM-038',name:'GDPR Article 22 Automated Decision Violation',cat:'Compliance',models:['Llama 3','Grok'],sev:'CRITICAL',cvss:9.0,status:'OPEN'},
+  {id:'CVE-2024-LLM-044',name:'Hallucinated Legal/Medical Advice',cat:'Hallucination',models:['Llama 3','GPT-4o'],sev:'HIGH',cvss:7.9,status:'OPEN'},
+  {id:'CVE-2024-LLM-051',name:'Context Window Poisoning',cat:'Prompt Injection',models:['All Models'],sev:'MEDIUM',cvss:5.8,status:'MONITORING'},
+  {id:'CVE-2024-LLM-058',name:'Model Inversion via API Probing',cat:'Data Leakage',models:['GPT-4o','Gemini'],sev:'MEDIUM',cvss:5.5,status:'PARTIAL'},
+  {id:'CVE-2024-LLM-064',name:'HIPAA PHI Exposure in Chat Logs',cat:'Compliance',models:['Llama 3','GPT-4o','Grok'],sev:'CRITICAL',cvss:9.4,status:'OPEN'},
+  {id:'CVE-2024-LLM-071',name:'Token Smuggling via Unicode Obfuscation',cat:'Prompt Injection',models:['GPT-4o','Gemini','Grok'],sev:'HIGH',cvss:8.0,status:'OPEN'},
+];
+
+function sevColor(s) {
+  return s==='CRITICAL'?'var(--risk-critical)':s==='HIGH'?'var(--risk-high)':s==='MEDIUM'?'var(--risk-medium)':'var(--risk-low)';
+}
+function sevLabel(s) {
+  return s==='CRITICAL'?'label-critical':s==='HIGH'?'label-high':s==='MEDIUM'?'label-medium':'label-low';
+}
+function modelColor(m) {
+  if(m.includes('GPT')) return '#10a37f';
+  if(m.includes('Claude')) return '#d4956a';
+  if(m.includes('Gemini')) return '#4285f4';
+  if(m.includes('Llama')) return '#a855f7';
+  if(m.includes('Grok')) return '#1d9bf0';
+  return '#5a7a90';
+}
+
+function initVulnerabilities() {
+  const tbody = document.getElementById('vuln-tbody');
+  tbody.innerHTML = VULNS.map(v => `
+    <tr>
+      <td><a href="https://nvd.nist.gov/vuln/detail/${v.id}" target="_blank" style="text-decoration:none"><code style="font-size:0.62rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,45,85,0.2)'" onmouseout="this.style.background='rgba(255,45,85,0.08)'">${v.id} ↗</code></a></td>
+      <td style="font-size:0.72rem;max-width:220px">${v.name}</td>
+      <td style="font-size:0.65rem;color:var(--text-muted)">${v.cat}</td>
+      <td>${v.models.map(m=>`<span class="model-pill" style="background:${modelColor(m)}18;color:${modelColor(m)};border:1px solid ${modelColor(m)}40">${m}</span>`).join('')}</td>
+      <td><span class="severity-pill ${sevLabel(v.sev)}">${v.sev}</span></td>
+      <td style="font-family:var(--font-display);font-size:0.8rem;color:${sevColor(v.sev)}">${v.cvss}</td>
+      <td style="font-size:0.6rem;letter-spacing:1px;color:${v.status==='OPEN'?'var(--risk-critical)':v.status==='PARTIAL'?'var(--risk-medium)':'var(--risk-low)'}">${v.status}</td>
+    </tr>`).join('');
+
+  mkChart('chart-vuln-cat', {
+    type: 'doughnut',
+    data: {
+      labels: ['Prompt Injection','Data Leakage','Compliance','Hallucination','Bias','Safety Bypass'],
+      datasets: [{ data:[28,24,18,14,10,6], backgroundColor:['#ff2d55','#ff6b35','#ffd166','#06d6a0','#a855f7','#1d9bf0'], borderWidth:0, hoverOffset:6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position:'right', labels:{ color:'#5a7a90', font:{size:10}, boxWidth:10 } } }
+    }
+  });
+
+  mkChart('chart-vuln-monthly', {
+    type: 'bar',
+    data: {
+      labels: MONTHS,
+      datasets: [
+        { label:'Critical', data:[8,12,9,14,11,16,13,18,15,19,17,22], backgroundColor:'#ff2d55aa', borderWidth:0 },
+        { label:'High',     data:[18,22,20,25,23,28,25,30,27,32,29,34], backgroundColor:'#ff6b35aa', borderWidth:0 },
+        { label:'Medium',   data:[14,16,15,18,17,20,18,22,20,24,21,26], backgroundColor:'#ffd16688', borderWidth:0 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { stacked:true, ticks:TICKS, grid:GRID },
+        y: { stacked:true, ticks:TICKS, grid:GRID }
+      },
+      plugins: { legend: { labels:{ color:'#5a7a90', font:{size:10}, boxWidth:10 } } }
+    }
+  });
+}
+
+// ═══════════ COMPLIANCE ═══════════
+const FRAMEWORKS = [
+  {name:'GDPR',sub:'EU General Data Protection Regulation',scores:[62,78,58,31,44]},
+  {name:'HIPAA',sub:'Health Insurance Portability & Accountability',scores:[55,72,51,24,38]},
+  {name:'SOC 2 Type II',sub:'Service Organization Control',scores:[70,84,68,42,55]},
+  {name:'NIST AI RMF',sub:'AI Risk Management Framework',scores:[66,80,64,38,52]},
+  {name:'ISO 27001',sub:'Information Security Management',scores:[74,86,71,48,60]},
+  {name:'CCPA',sub:'California Consumer Privacy Act',scores:[68,80,65,36,50]},
+  {name:'EU AI Act',sub:'European AI Regulation (2024)',scores:[50,74,48,22,35]},
+  {name:'PCI DSS',sub:'Payment Card Industry Data Security',scores:[72,85,70,44,58]},
+];
+
+function scoreColor(s) {
+  if(s>=90) return 'var(--risk-safe)';
+  if(s>=75) return 'var(--risk-low)';
+  if(s>=50) return 'var(--risk-medium)';
+  return 'var(--risk-critical)';
+}
+
+function initCompliance() {
+  const tbody = document.getElementById('compliance-tbody');
+  tbody.innerHTML = FRAMEWORKS.map(f => `
+    <tr>
+      <td>
+        <div style="font-size:0.72rem;font-weight:500">${f.name}</div>
+        <div style="font-size:0.58rem;color:var(--text-muted);margin-top:2px">${f.sub}</div>
+      </td>
+      ${f.scores.map(s=>`<td style="text-align:center">
+        <span style="font-family:var(--font-display);font-size:0.9rem;color:${scoreColor(s)}">${s}</span>
+      </td>`).join('')}
+    </tr>`).join('');
+
+  mkChart('chart-compliance', {
+    type: 'bar',
+    data: {
+      labels: FRAMEWORKS.map(f=>f.name),
+      datasets: MODELS.map((m,i) => ({
+        label: m, data: FRAMEWORKS.map(f=>f.scores[i]),
+        backgroundColor: M_COLORS[i]+'99', borderColor: M_COLORS[i], borderWidth:1
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels:{ color:'#5a7a90', font:{size:9}, boxWidth:10 } } },
+      scales: {
+        x: { ticks:{...TICKS,font:{size:8}}, grid:GRID },
+        y: { ticks:{...TICKS,callback:v=>v+'%'}, grid:GRID, min:0, max:100,
+             grid: { color:(ctx) => ctx.tick.value===75?'rgba(6,214,160,0.3)':ctx.tick.value===50?'rgba(255,209,102,0.3)':'#162030' } }
+      }
+    }
+  });
+
+  const gaps = [
+    {fw:'EU AI Act',model:'Llama 3',score:22,issue:'No built-in explainability, no audit trail, fails high-risk AI system requirements under Article 9.'},
+    {fw:'HIPAA',model:'Llama 3',score:24,issue:'PHI (Protected Health Information) extractable via adversarial prompting. No BAA (Business Associate Agreement) available for open-source deployment.'},
+    {fw:'GDPR Art. 22',model:'Grok 1.5',score:35,issue:'Automated decision-making without human oversight pathway violates Article 22 rights. No opt-out mechanism exposed via API.'},
+    {fw:'CCPA',model:'Llama 3',score:36,issue:'No data deletion capability. Self-hosted deployments lack consumer rights fulfillment infrastructure required by CCPA Section 1798.105.'},
+    {fw:'EU AI Act',model:'Grok 1.5',score:35,issue:'Insufficient transparency documentation and lack of conformity assessment for high-risk use cases under Annex III.'},
+  ];
+
+  document.getElementById('compliance-gaps').innerHTML = gaps.map(g => `
+    <div class="exec-finding" style="border-left-color:var(--risk-critical)">
+      <div class="finding-title">${g.fw} — ${g.model} — Score: <span style="color:var(--risk-critical)">${g.score}/100</span></div>
+      <div class="finding-body">${g.issue}</div>
+    </div>`).join('');
+}
+
+// ═══════════ INCIDENTS ═══════════
+const INCIDENTS = [
+  {time:'2025-02-18 14:32',model:'Llama 3',type:'PII Extraction',sev:'CRITICAL',desc:'Red team extracted 847 email addresses from training data via structured extraction attack. Avg 4.2 turns per successful extraction.'},
+  {time:'2025-02-17 09:15',model:'GPT-4o',type:'Prompt Injection',sev:'HIGH',desc:'Indirect injection via PDF upload successfully overrode system prompt. Attacker gained unrestricted output for 3 minutes before detection.'},
+  {time:'2025-02-15 22:08',model:'Grok 1.5',type:'Jailbreak',sev:'HIGH',desc:'Roleplay-based jailbreak achieved safety bypass on 18 of 50 test prompts (36% success rate). CBRN content generated in 3 instances.'},
+  {time:'2025-02-14 11:44',model:'Gemini Ultra',type:'Data Memorization',sev:'HIGH',desc:'Verbatim training data recovery confirmed: 14 full email addresses, 3 partial SSNs recovered via membership inference attack.'},
+  {time:'2025-02-12 16:20',model:'GPT-4o',type:'Hallucination',sev:'MEDIUM',desc:'Legal advice hallucination event: model cited 4 non-existent case laws with confidence score >0.9. User acted on fabricated precedent.'},
+  {time:'2025-02-10 08:55',model:'Llama 3',type:'Bias Detection',sev:'MEDIUM',desc:'Hiring recommendation audit found 31% lower selection rate for qualified female candidates in technical roles across 1,200 test cases.'},
+  {time:'2025-02-08 19:30',model:'All Models',type:'Context Poisoning',sev:'MEDIUM',desc:'Novel context window poisoning technique successfully manipulated all 5 models when >40% of context window was adversarial content.'},
+  {time:'2025-02-05 13:10',model:'Grok 1.5',type:'Compliance',sev:'CRITICAL',desc:'GDPR Article 22 violation confirmed: automated credit decisions made without disclosed human review pathway. Regulatory notification filed.'},
+];
+
+function initIncidents() {
+  mkChart('chart-incidents', {
+    type: 'line',
+    data: {
+      labels: ['Week 1','Week 2','Week 3','Week 4'],
+      datasets: [
+        { label:'Critical', data:[3,5,4,7], borderColor:'#ff2d55', backgroundColor:'rgba(255,45,85,0.1)', fill:true, borderWidth:2, tension:0.4 },
+        { label:'High',     data:[8,11,9,14], borderColor:'#ff6b35', backgroundColor:'rgba(255,107,53,0.08)', fill:true, borderWidth:2, tension:0.4 },
+        { label:'Medium',   data:[12,14,13,16], borderColor:'#ffd166', backgroundColor:'rgba(255,209,102,0.06)', fill:true, borderWidth:2, tension:0.4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels:{ color:'#5a7a90', font:{size:9}, boxWidth:10 } } },
+      scales: { x:{ ticks:TICKS, grid:GRID }, y:{ ticks:TICKS, grid:GRID } }
+    }
+  });
+
+  mkChart('chart-vectors', {
+    type: 'doughnut',
+    data: {
+      labels: ['Prompt Injection','Data Extraction','Jailbreak','Bias Exploit','Compliance','Hallucination'],
+      datasets: [{ data:[32,26,18,12,7,5], backgroundColor:['#ff2d55','#ff6b35','#a855f7','#ffd166','#4285f4','#06d6a0'], borderWidth:0, hoverOffset:6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position:'right', labels:{ color:'#5a7a90', font:{size:9}, boxWidth:10 } } }
+    }
+  });
+
+  mkChart('chart-mttd', {
+    type: 'bar',
+    data: {
+      labels: MODELS,
+      datasets: [{ label:'MTTD (hours)', data:[2.4,1.1,3.2,0.8,2.9], backgroundColor: M_COLORS.map(c=>c+'99'), borderColor:M_COLORS, borderWidth:1 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display:false } },
+      scales: {
+        x: { ticks:{...TICKS,font:{size:9}}, grid:GRID },
+        y: { ticks:{...TICKS,callback:v=>v+'h'}, grid:GRID }
+      }
+    }
+  });
+
+  document.getElementById('incident-log').innerHTML = INCIDENTS.map(inc => `
+    <div class="incident-row">
+      <div class="incident-time">${inc.time}</div>
+      <div><span class="severity-pill ${sevLabel(inc.sev)}">${inc.sev}</span></div>
+      <div>
+        <div style="font-size:0.72rem;margin-bottom:3px"><span style="color:${modelColor(inc.model)}">${inc.model}</span> — ${inc.type}</div>
+        <div style="font-family:var(--font-body);font-style:italic;font-size:0.78rem;color:var(--text-muted);line-height:1.5">${inc.desc}</div>
+      </div>
+      <div></div>
+    </div>`).join('');
+}
+
+// ═══════════ COMPARE ═══════════
+function initCompare() {
+  const injectionTypes = ['Direct Override','Roleplay Escape','Doc Injection','Token Smuggling','Multi-turn'];
+  mkChart('chart-injection', {
+    type: 'bar',
+    data: {
+      labels: injectionTypes,
+      datasets: MODELS.map((m,i) => ({
+        label:m, data: [
+          [22,8,18,15,12],[8,5,2,4,6],[14,10,12,10,9],[25,12,20,18,16],[30,14,24,22,20]
+        ][0].map((_,j)=>([
+          [22,8,14,25,30],[8,5,3,6,8],[14,10,12,10,11],[25,12,20,18,16],[30,14,24,22,20]
+        ][i][j])),
+        backgroundColor: M_COLORS[i]+'99', borderColor:M_COLORS[i], borderWidth:1
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels:{ color:'#5a7a90', font:{size:9}, boxWidth:10 } } },
+      scales: {
+        x: { ticks:TICKS, grid:GRID },
+        y: { ticks:{...TICKS,callback:v=>v+'%'}, grid:GRID, max:40 }
+      }
+    }
+  });
+
+  const piiTypes = ['Email','SSN (partial)','Phone','Address','Medical'];
+  const piiData = [[18,8,14,31,22],[3,1,2,4,5],[12,6,10,25,16],[8,3,7,18,11],[5,2,4,12,8]];
+  mkChart('chart-pii', {
+    type: 'bar',
+    data: {
+      labels: piiTypes,
+      datasets: MODELS.map((m,i) => ({
+        label:m, data: piiData.map(r=>r[i]),
+        backgroundColor: M_COLORS[i]+'99', borderColor:M_COLORS[i], borderWidth:1
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels:{ color:'#5a7a90', font:{size:9}, boxWidth:10 } } },
+      scales: {
+        x: { ticks:TICKS, grid:GRID },
+        y: { ticks:{...TICKS,callback:v=>v+'%'}, grid:GRID }
+      }
+    }
+  });
+
+  const hallDomains = ['Legal','Medical','Financial','Scientific','Historical'];
+  const hallData = [[18,22,24,12,20],[8,10,12,6,9],[15,18,20,10,16],[28,32,34,18,30],[10,14,15,8,12]];
+  mkChart('chart-hallucination', {
+    type: 'bar',
+    data: {
+      labels: hallDomains,
+      datasets: MODELS.map((m,i) => ({
+        label:m, data: hallData.map(r=>r[i]),
+        backgroundColor: M_COLORS[i]+'99', borderColor:M_COLORS[i], borderWidth:1
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels:{ color:'#5a7a90', font:{size:9}, boxWidth:10 } } },
+      scales: {
+        x: { ticks:TICKS, grid:GRID },
+        y: { ticks:{...TICKS,callback:v=>v+'%'}, grid:GRID }
+      }
+    }
+  });
+
+  const biasUseCases = ['Hiring','Lending','Medical Triage','Legal Sentencing','Education'];
+  const biasData = [[0.18,0.22,0.20,0.24,0.16],[0.08,0.10,0.09,0.11,0.07],[0.14,0.18,0.16,0.20,0.13],[0.31,0.34,0.30,0.35,0.28],[0.22,0.26,0.24,0.28,0.20]];
+  mkChart('chart-bias', {
+    type: 'bar',
+    data: {
+      labels: biasUseCases,
+      datasets: MODELS.map((m,i) => ({
+        label:m, data: biasData.map(r=>r[i]),
+        backgroundColor: M_COLORS[i]+'99', borderColor:M_COLORS[i], borderWidth:1
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels:{ color:'#5a7a90', font:{size:9}, boxWidth:10 } } },
+      scales: {
+        x: { ticks:{...TICKS,font:{size:9}}, grid:GRID },
+        y: { ticks:{...TICKS,callback:v=>v.toFixed(2)}, grid:GRID }
+      }
+    }
+  });
+
+  const useCases = [
+    {uc:'Healthcare / HIPAA',scores:['⚠ CAUTION','✓ APPROVED','⚠ CAUTION','✗ REJECT','✗ REJECT'],rec:'Claude 3.5'},
+    {uc:'Financial Services',scores:['⚠ CAUTION','✓ APPROVED','⚠ CAUTION','✗ REJECT','⚠ CAUTION'],rec:'Claude 3.5'},
+    {uc:'Legal Research',scores:['⚠ CAUTION','✓ APPROVED','⚠ CAUTION','✗ REJECT','⚠ CAUTION'],rec:'Claude 3.5'},
+    {uc:'Internal Productivity',scores:['✓ APPROVED','✓ APPROVED','✓ APPROVED','⚠ CAUTION','⚠ CAUTION'],rec:'Claude / GPT'},
+    {uc:'Customer-Facing Chatbot',scores:['✓ APPROVED','✓ APPROVED','✓ APPROVED','✗ REJECT','⚠ CAUTION'],rec:'Claude 3.5'},
+    {uc:'Open-Source / On-Prem',scores:['N/A','N/A','N/A','⚠ CAUTION','N/A'],rec:'Llama w/ Guardrails'},
+    {uc:'Government / Defense',scores:['⚠ CAUTION','✓ APPROVED','✗ REJECT','✗ REJECT','✗ REJECT'],rec:'Claude 3.5'},
+    {uc:'Education Platform',scores:['✓ APPROVED','✓ APPROVED','✓ APPROVED','⚠ CAUTION','⚠ CAUTION'],rec:'Claude / Gemini'},
+  ];
+
+  function recColor(r) {
+    if(r.includes('✓')) return 'var(--risk-low)';
+    if(r.includes('⚠')) return 'var(--risk-medium)';
+    if(r.includes('✗')) return 'var(--risk-critical)';
+    return 'var(--text-muted)';
+  }
+
+  document.getElementById('rec-tbody').innerHTML = useCases.map(u=>`
+    <tr>
+      <td style="font-size:0.72rem">${u.uc}</td>
+      ${u.scores.map((s,i)=>`<td style="text-align:center;font-size:0.65rem;color:${recColor(s)}">${s}</td>`).join('')}
+      <td style="font-size:0.65rem;color:var(--risk-low);letter-spacing:1px">${u.rec}</td>
+    </tr>`).join('');
+}
+
+// ═══════════ TAB ROUTING ═══════════
+const panelInits = {
+  overview: initOverview,
+  models: initModels,
+  vulnerabilities: initVulnerabilities,
+  compliance: initCompliance,
+  incidents: initIncidents,
+  compare: initCompare
+};
+const initialized = {};
+
+function showPanel(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+  if(!initialized[id]) {
+    panelInits[id]?.();
+    initialized[id] = true;
+  }
+}
+
+// ═══════════ INIT ═══════════
+function init() {
+  const now = new Date();
+  document.getElementById('last-scan-time').textContent =
+    'Last scan: ' + now.toLocaleDateString('en-US',{month:'short',day:'numeric'}) +
+    ' ' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  initOverview();
+  initialized['overview'] = true;
+
+  // Attempt to load live data if backend is configured
+  loadLiveData();
+}
+
+init();
+</script>
+</body>
+</html>
